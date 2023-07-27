@@ -1,5 +1,5 @@
 module TZJData
 
-# Write your package code here.
+using Artifacts
 
 end

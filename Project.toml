@@ -1,7 +1,10 @@
 name = "TZJData"
 uuid = "dc5dba14-91b3-4cab-a142-028a31da12f7"
 authors = ["Curtis Vogt <curtis.vogt@gmail.com>"]
-version = "0.0.1"
+version = "0.0.0"
+
+[deps]
+Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [compat]
 julia = "1.6"
