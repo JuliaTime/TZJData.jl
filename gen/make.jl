@@ -4,8 +4,9 @@ using Pkg.Artifacts: bind_artifact!
 using SHA: SHA
 using Tar: Tar
 using TimeZones: TZData, _scratch_dir
-using LibGit2
+using LibGit2: LibGit2, GitReference, GitRepo
 
+include("libgit2.jl")
 #=
 1. Create artifact
 2. Bind artifact to Artifact.toml
@@ -23,90 +24,53 @@ Requirements:
 - credentials
 =#
 
-using LibGit2: GitCommit, GitReference, GitRepo, GitHash, @check, ensure_initialized
-
-# https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_set_head_detached
-function git_repository_set_head_detached(repo::GitRepo, oid::GitHash)
-    ensure_initialized()
-    @assert repo.ptr != C_NULL
-    oid_ptr = Ref(oid)
-    @check ccall((:git_repository_set_head_detached, :libgit2), Cint,
-                 (Ptr{Cvoid}, Ptr{GitHash}),
-                 repo.ptr, oid_ptr)
-end
-
-function checkout!(repo::GitRepo, ref::GitReference; detach::Bool=false)
-    LibGit2.with(LibGit2.peel(GitCommit, ref)) do commit
-        LibGit2.checkout_tree(repo, commit)
-    end
-
-    if LibGit2.isbranch(ref) && !detach
-        LibGit2.head!(repo, ref)
-    else
-        git_repository_set_head_detached(repo, LibGit2.GitHash(ref))
-    end
-end
-
-function branch!(
-    repo::GitRepo,
-    branch::GitReference,
-)
-    if LibGit2.isbranch(ref)
-    LibGit2.with(LibGit2.peel(GitCommit, branch)) do commit
-        LibGit2.checkout_tree(repo, commit)
-    end
-
-            # switch head to the branch
-            head!(repo, branch_ref)
-end
-
-function push(repo::GitRepo, ref::GitReference; credentials=nothing)
-    refspecs = [LibGit2.name(ref)]
-    LibGit2.push(repo; refspecs, credentials)
-end
-
-function push_pkg_artifact(
+function commit_push_pkg_artifact(
     body,
     repo_dir::AbstractString,
     branch::AbstractString="main";
     kwargs...
 )
-    repo = LibGit2.GitRepo(repo_dir)
+    repo = GitRepo(repo_dir)
     branch_ref = LibGit2.lookup_branch(repo, branch)
-    return commit_pkg_artifact(body, repo, branch_ref; kwargs...)
+    return commit_push_pkg_artifact(body, repo, branch_ref; kwargs...)
 end
 
-"""
-Assumes repo isn't dirty and we can cleanly switch branches
-"""
-function push_pkg_artifact(
+function commit_push_pkg_artifact(
     body,
     repo::GitRepo,
     branch::GitReference;
     artifacts_toml_filename::AbstractString="Artifacts.toml",
     message::AbstractString="Updated $artifacts_toml_filename",
+    credentials=nothing,
 )
-    prev_ref = LibGit2.head(repo)
-    refspecs = [LibGit2.name(branch)]
-
-    LibGit2.fetch(repo; refspecs, credentials)
-
-    # Create or checkout the specified `branch` then rebase so the local branch
-    # is up to date with the remote branch.
-    LibGit2.branch!(repo, branch; track=branch)
-    LibGit2.rebase!(repo, LibGit2.name(LibGit2.upstream(ref)))
-
-    try
-        artifacts_toml = joinpath(repo_dir, artifacts_toml_filename)
+    pull_commit_push(repo, branch; message, credentials) do
+        artifacts_toml = joinpath(LibGit2.path(repo), artifacts_toml_filename)
         result = body(artifacts_toml)
-
         LibGit2.add!(repo, artifacts_toml_filename)
-        LibGit2.commit(repo, message)
-    finally
-        checkout!(repo, prev_ref)
     end
 
-    return ref
+    return nothing
+end
+
+function upload_to_github_release_assets(repo_url, tag, commit, path; token=ENV["GITHUB_TOKEN"])
+    owner = basename(dirname(repo_url))
+    repo_name = basename(repo_url)
+
+    # commit_sha = LibGit2.GitHash(ref)
+
+    # Based on: https://github.com/JuliaPackaging/BinaryBuilder.jl/blob/d40ec617d131a1787851559ef1a9f04efce19f90/src/AutoBuild.jl#L487
+    # TODO: Passing in a directory path uploads multiple assets
+    # TODO: Would be nice to perform parallel uploads
+    cmd = ```
+        $(ghr()) \
+        -owner $owner \
+        -repository $repo_name \
+        -commitish $commit \
+        -token $token \
+        $tag $path
+    ```
+
+    run(cmd)
 end
 
 version = "2023c"
@@ -127,16 +91,32 @@ sha256 = bytes2hex(open(SHA.sha256, tarball))
 
 url = "https://foo"
 
-name = "tzjf"
+repo_url = "https://github.com/JuliaTime/TZJFileData.jl"
 
-push_pkg_artifact("/tmp/bar") do artifacts_toml
+tag = "v0.0.1"
+
+# The future location the artifact will be available from
+artifact_url = "$(repo_url)/releases/download/$(tag)"
+
+commit_push_pkg_artifact("/tmp/bar") do artifacts_toml
     bind_artifact!(
         artifacts_toml,
-        name,
+        "tzjf",
         git_tree_sha1;
-        download_info=[(url, sha256)],
+        download_info=[(artifact_url, sha256)],
+        force=true,
     )
 end
+
+###
+
+
+
+repo = LibGit2.GitRepo(".")
+ref = LibGit2.lookup_branch(repo, "main")
+commit_sha = string(LibGit2.GitHash(ref))
+
+upload_to_github_release_assets(repo_url, tag, commit_sha, tarball)
 
 #=
 git init --bare foo.git
