@@ -22,6 +22,9 @@ Requirements:
 - tag
 - artifact
 - credentials
+
+
+
 =#
 
 function commit_push_pkg_artifact(
@@ -97,7 +100,7 @@ tag = "v0.0.1"
 
 # The future location the artifact will be available from
 artifact_url = "$(repo_url)/releases/download/$(tag)"
-
+#=
 repo = "/Users/cvogt/.julia/dev/TZJFileData"
 branch = "cv/wip"
 commit_push_pkg_artifact(repo, branch) do artifacts_toml
@@ -114,6 +117,61 @@ end
 
 commit = commit_sha(repo, branch)
 upload_to_github_release_assets(repo_url, tag, commit, tarball)
+=#
+
+####
+
+mutable struct Artifact
+    name::String
+    path::Union{String,Nothing}  # compressed archive
+    url::String
+    sha256::Union{Vector{UInt8}, Nothing}
+    git_tree_sha1::Union{SHA1, Nothing}
+end
+
+
+RegexMatch("/JuliaTime/TZJFileData.jl/releases/downloads/v0.0.1/foo", org="JuliaTime", repo="TZJFileData.jl", tag="v0.0.1", filename="foo")
+    artifact_url = "$(repo_url)/releases/download/$(tag)/tzjfile-v1-tzdata$(tzdata_version).tar.gz"
+
+function create_artifact_tarball(content_dir, name, url; tarball_dir=tempdir())
+    tarball = joinpath(tarball_dir, basename(url))
+
+    open(GzipCompressorStream, tarball, "w") do tar
+        Tar.create(content_dir, tar)
+    end
+
+    # Compute the SHA-1 of the tree content.
+    git_tree_sha1 = open(GzipDecompressorStream, tarball, "r") do tar
+        SHA1(Tar.tree_hash(tar))
+    end
+
+    # Compute the SHA-256 of the archive.
+    sha256 = open(SHA.sha256, tarball)
+
+    return Artifact(name, tarball, url, sha256, git_tree_sha1)
+end
+
+tzdata_version = "2023c"
+pkg_url = "https://github.com/JuliaTime/TZJFileData.jl"
+tag = "v0.0.1"
+
+# The future location the artifact will be available from
+artifact_url = "$(repo_url)/releases/download/$(tag)/tzjfile-v1-tzdata$(tzdata_version).tar.gz"
+
+TZData.cleanup(tzdata_version, _scratch_dir())
+compiled_dir = TZData.build(tzdata_version, _scratch_dir())
+
+artifact = create_artifact_tarball(compiled_dir, "tzjfile", artifact_url)
+
+
+bind_artifact!(
+    artifacts_toml,
+    "tzjfile",
+    git_tree_sha1;
+    download_info=[(artifact_url, sha256)],
+    force=true,
+)
+
 
 #=
 git init --bare foo.git
