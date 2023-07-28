@@ -56,6 +56,10 @@ function pull_commit_push(
     # Create or checkout the specified `branch` then rebase so the local branch
     # is up to date with the remote branch.
     branch!(repo, branch; track=branch)
+
+    upstream_branch = LibGit2.upstream(branch)
+    upstream_branch === nothing && error("Branch $branch has no upstream")
+
     LibGit2.rebase!(repo, LibGit2.name(LibGit2.upstream(branch)))
 
     try
@@ -71,3 +75,42 @@ function pull_commit_push(
 
     return nothing
 end
+
+commit_sha(repo::GitRepo, branch::GitReference) = LibGit2.GitHash(branch)
+
+function commit_sha(repo::AbstractString, branch::AbstractString)
+    return LibGit2.with(LibGit2.GitRepo(repo)) do repo
+        branch_ref = LibGit2.lookup_branch(repo, branch)
+        commit_sha(repo, branch_ref)
+    end
+end
+
+#=
+module Git
+
+struct Repository
+    path::String
+end
+
+struct Commit
+    sha::SHA1
+end
+
+struct Tag
+    tag_name::String
+end
+
+struct Branch
+    tag_name::String
+end
+
+function commit_sha(repo::Repository, tag::Tag)
+    with(GitRepo(repo.path)) do repo
+
+end
+
+
+repo = LibGit2.GitRepo(".")
+ref = LibGit2.lookup_branch(repo, "main")
+commit_sha = string(LibGit2.GitHash(ref))
+=#

@@ -76,7 +76,7 @@ end
 version = "2023c"
 TZData.cleanup(version, _scratch_dir())
 compiled_dir = TZData.build(version, _scratch_dir())
-tarball = "tzdata$(version)_tzjf_v1.tar.gz"
+tarball = "tzjfile-v1-tzdata$(version).tar.gz"
 
 open(GzipCompressorStream, tarball, "w") do tar
     Tar.create(compiled_dir, tar)
@@ -98,10 +98,12 @@ tag = "v0.0.1"
 # The future location the artifact will be available from
 artifact_url = "$(repo_url)/releases/download/$(tag)"
 
-commit_push_pkg_artifact("/tmp/bar") do artifacts_toml
+repo = "/Users/cvogt/.julia/dev/TZJFileData"
+branch = "cv/wip"
+commit_push_pkg_artifact(repo, branch) do artifacts_toml
     bind_artifact!(
         artifacts_toml,
-        "tzjf",
+        "tzjfile",
         git_tree_sha1;
         download_info=[(artifact_url, sha256)],
         force=true,
@@ -110,13 +112,8 @@ end
 
 ###
 
-
-
-repo = LibGit2.GitRepo(".")
-ref = LibGit2.lookup_branch(repo, "main")
-commit_sha = string(LibGit2.GitHash(ref))
-
-upload_to_github_release_assets(repo_url, tag, commit_sha, tarball)
+commit = commit_sha(repo, branch)
+upload_to_github_release_assets(repo_url, tag, commit, tarball)
 
 #=
 git init --bare foo.git
