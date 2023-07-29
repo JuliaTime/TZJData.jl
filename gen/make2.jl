@@ -1,3 +1,13 @@
+using Base: SHA1
+using CodecZlib: GzipCompressorStream, GzipDecompressorStream
+using LibGit2: LibGit2
+using Pkg.Artifacts: bind_artifact!
+using Pkg.Types: read_project, write_project
+using TimeZones: TZData, _scratch_dir
+using TimeZones.TZData: tzdata_latest_version
+using SHA: sha256
+using Tar: Tar
+using TOML: TOML
 using URIs: URI
 using ghr_jll: ghr
 
@@ -30,6 +40,14 @@ end
 function sha256sum(tarball_path)
     return open(tarball_path, "r") do tar
         bytes2hex(sha256(tar))
+    end
+end
+
+function remote_url(repo_root::AbstractString, name::AbstractString="origin")
+    return LibGit2.with(LibGit2.GitRepo(repo_root)) do repo
+        LibGit2.with(LibGit2.lookup_remote(repo, name)) do remote
+            LibGit2.url(remote)
+        end
     end
 end
 
@@ -90,21 +108,37 @@ function upload_to_github_release(owner, repo_name, commit, tag, path; token=ENV
     run(cmd)
 end
 
+# TODO: Re-running always bumps version
 if abspath(PROGRAM_FILE) == @__FILE__
-    tzdata_version = "2023c"
+    tzdata_version = tzdata_latest_version()
+    tarball_name = "tzjfile-v1-tzdata$(tzdata_version).tar.gz"
 
     # Build tzjfile artifact content
     TZData.cleanup(tzdata_version, _scratch_dir())
     compiled_dir = TZData.build(tzdata_version, _scratch_dir())
 
-    tarball_path = joinpath(tempdir(), "tzjfile-v1-tzdata$(tzdata_version).tar.gz")
+    @info "Creating tarball $tarball_name"
+    tarball_path = joinpath(tempdir(), tarball_name)
     create_tarball(compiled_dir, tarball_path)
 
-    pkg_url = "https://github.com/JuliaTime/TZJFileData.jl"
-    tag = "v0.0.1"
-    artifact_url = "$(pkg_url)/releases/download/$(tag)/tzjfile-v1-tzdata$(tzdata_version).tar.gz"
+    repo_path = joinpath(@__DIR__, "..")
+    pkg_url = remote_url(repo_path)
 
-    artifacts_toml = joinpath(@__DIR__, "..", "Artifacts.toml")
+    # Read Project.toml
+    project_path = joinpath(repo_path, "Project.toml")
+    project = read_project(project_path)
+    old_version = project.version
+    new_version = Base.nextpatch(project.version)
+    new_version = v"0.0.1"
+
+    @info "Bumping package $(project.name) from $old_version -> $new_version"
+    project.version = new_version
+    write_project(project, project_path)
+
+    tag = "v$(new_version)"
+    artifact_url = "$(pkg_url)/releases/download/$(tag)/$(basename(tarball_path))"
+
+    artifacts_toml = joinpath(repo_path, "Artifacts.toml")
     bind_artifact!(
         artifacts_toml,
         "tzjfile",
@@ -113,10 +147,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
         force=true,
     )
 
-    # TODO: Ensure no other files are staged
-    # TODO:
+    # TODO: Ensure no other files are staged before committing
 
-    LibGit2.with(LibGit2.GitRepo(joinpath(@__DIR__, "..")) do repo
+    LibGit2.with(LibGit2.GitRepo(repo_path) do repo
         LibGit2.add!(repo, basename(artifacts_toml))
         LibGit2.commit(repo, message)
 
@@ -125,7 +158,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         LibGit2.push(repo; refspecs, credentials)
     end
 
-    upload_to_github_release(tarball_path, artifact_url)
+    # upload_to_github_release(tarball_path, artifact_url)
 end
 
 
