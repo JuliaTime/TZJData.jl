@@ -1,0 +1,6 @@
+[tzjdata]
+git-tree-sha1 = "52e48e96c4df04eeebc6ece0d9f1c3b545f0544c"
+
+    [[tzjdata.download]]
+    sha256 = "50cd6c70dfb582336b4223adb3fe76aca6c6a9a5982c3111001e2091fb947b66"
+    url = "https://github.com/JuliaTime/TZJData.jl/releases/download/v0.0.1+tzdata2023c/tzjfile-v1-tzdata2023c.tar.gz"
