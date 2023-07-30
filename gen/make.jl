@@ -157,7 +157,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     )
 
     # TODO: Ensure no other files are staged before committing
-    @info "Committing and pushing Artifact.toml"
+    @info "Committing and pushing Project.toml and Artifact.toml"
     branch = "main"
     message = "Use tzdata$(tzdata_version)"
 
@@ -167,6 +167,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         LibGit2.with(LibGit2.GitRepo(repo_path)) do repo
             # TODO: This allows empty commits
             LibGit2.add!(repo, basename(artifacts_toml))
+            LibGit2.add!(repo, basename(project_path))
             LibGit2.commit(repo, message)
 
             # Same as "refs/heads/$branch" but fails if branch doesn't exist locally
