@@ -1,6 +1,6 @@
-using TZJFileData
+using TZJData
 using Test
 
-@testset "TZJFileData.jl" begin
+@testset "TZJData.jl" begin
     # Write your tests here.
 end
