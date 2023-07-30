@@ -1,4 +1,4 @@
-module TZJFileData
+module TZJData
 
 # Write your package code here.
 
