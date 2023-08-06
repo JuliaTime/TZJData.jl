@@ -137,7 +137,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         new_version.minor,
         new_version.patch,
         (),
-        ("tzdata$(tzdata_version)",),
+        (tzdata_version,),
     )
 
     @info "Bumping package $(project.name) from $old_version -> $new_version"
