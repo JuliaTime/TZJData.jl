@@ -1,25 +1,26 @@
 name: CI
 on:
+  pull_request:
   push:
     branches:
       - main
     tags: ["*"]
-  pull_request:
 concurrency:
-  # Skip intermediate builds: always.
+  # Skip intermediate builds: on all builds except on the "main" branch.
   # Cancel intermediate builds: only if it is a pull request build.
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.run_number || 0 }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - "1.6"
-          - "1"
+          - "1.6"  # LTS / Oldest supported version
+          - "1"    # Latest release
           - "nightly"
         os:
           - ubuntu-latest
