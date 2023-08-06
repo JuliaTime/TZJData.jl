@@ -126,8 +126,8 @@ if abspath(PROGRAM_FILE) == @__FILE__
     pkg_url = remote_url(repo_path)
 
     # Read Project.toml
-    project_path = joinpath(repo_path, "Project.toml")
-    project = read_project(project_path)
+    project_toml = joinpath(repo_path, "Project.toml")
+    project = read_project(project_toml)
     old_version = project.version
     new_version = Base.nextpatch(project.version)
 
@@ -142,7 +142,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     @info "Bumping package $(project.name) from $old_version -> $new_version"
     project.version = new_version
-    write_project(project, project_path)
+    write_project(project, project_toml)
 
     tag = "v$(new_version)"
     artifact_url = "$(pkg_url)/releases/download/$(tag)/$(basename(tarball_path))"
@@ -157,7 +157,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     )
 
     # TODO: Ensure no other files are staged before committing
-    @info "Committing and pushing Artifact.toml"
+    @info "Committing and pushing Project.toml and Artifacts.toml"
     branch = "main"
     message = "Use tzdata$(tzdata_version)"
 
@@ -167,6 +167,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         LibGit2.with(LibGit2.GitRepo(repo_path)) do repo
             # TODO: This allows empty commits
             LibGit2.add!(repo, basename(artifacts_toml))
+            LibGit2.add!(repo, basename(project_toml))
             LibGit2.commit(repo, message)
 
             # Same as "refs/heads/$branch" but fails if branch doesn't exist locally
