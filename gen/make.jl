@@ -159,7 +159,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     # TODO: Ensure no other files are staged before committing
     @info "Committing and pushing Project.toml and Artifacts.toml"
     branch = "main"
-    message = "Update to tzdata$(tzdata_version)"
+    message = "Set artifact to tzdata$(tzdata_version) and project to $(new_version)"
 
     # TODO: ghr and LibGit2 use different credential setups. Double check
     # what BB does here.
@@ -182,5 +182,3 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     upload_to_github_release(tarball_path, artifact_url, branch)
 end
-
-
