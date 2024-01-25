@@ -9,7 +9,7 @@ jobs:
     steps:
       - run: |
           mkdir dir
-          touch file
+          touch dir/file
       - uses: actions/upload-artifact@v4
         id: action-artifact
         with:
