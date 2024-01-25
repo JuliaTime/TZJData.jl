@@ -18,3 +18,5 @@ jobs:
       - run: |
           echo ${{ steps.action-artifact.outputs.artifact-id }}
           echo ${{ steps.action-artifact.outputs.artifact-url }}
+          url="${{ steps.action-artifact.outputs.artifact-url }}"
+          curl -sSL "$url" | shasum -a 256
