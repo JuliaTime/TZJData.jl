@@ -1,0 +1,20 @@
+name: Test
+on:
+  push:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      JULIA_PROJECT: gen
+    steps:
+      - run: |
+          mkdir dir
+          touch file
+      - uses: actions/upload-artifact@v4
+        id: action-artifact
+        with:
+          name: test
+          path: dir
+      - run: |
+          echo ${{ steps.action-artifact.outputs.artifact-id }}
+          echo ${{ steps.action-artifact.outputs.artifact-url }}
