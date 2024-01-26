@@ -27,7 +27,7 @@ jobs:
         id: build
         shell: julia --color=yes {0}
         run: |
-          include("gen/make.jl")
+          include(joinpath(pwd(), "gen", "make.jl"))
           (; tarball_path) = update_tzdata()
           @show tarball_path
           open(ENV["GITHUB_OUTPUT"], "a") do io
