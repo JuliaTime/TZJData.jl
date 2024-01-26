@@ -9,8 +9,7 @@ jobs:
         id: action-artifact
         with:
           workflow: Test.yaml
-          branch: cv/workflow-test
-          name: test
+          name: foo123
       - run: |
           ls -la
           date
