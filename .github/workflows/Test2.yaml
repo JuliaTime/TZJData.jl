@@ -5,6 +5,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - run: sleep 5
       - uses: dawidd6/action-download-artifact@v3
         id: action-artifact
         with:
