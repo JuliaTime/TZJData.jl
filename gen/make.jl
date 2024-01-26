@@ -109,19 +109,7 @@ function upload_to_github_release(owner, repo_name, commit, tag, path; token=ENV
     run(cmd)
 end
 
-# TODO: Re-running always bumps version
-if abspath(PROGRAM_FILE) == @__FILE__
-    tzdata_version = tzdata_latest_version()
-    tarball_name = "tzjfile-v1-tzdata$(tzdata_version).tar.gz"
-
-    # Build tzjfile artifact content
-    # TZData.cleanup(tzdata_version, _scratch_dir())
-    compiled_dir = TZData.build(tzdata_version, _scratch_dir())
-
-    @info "Creating tarball $tarball_name"
-    tarball_path = joinpath(tempdir(), tarball_name)
-    create_tarball(compiled_dir, tarball_path)
-
+function update_tzdata()
     repo_path = joinpath(@__DIR__, "..")
     pkg_url = remote_url(repo_path)
 
@@ -129,7 +117,28 @@ if abspath(PROGRAM_FILE) == @__FILE__
     project_toml = joinpath(repo_path, "Project.toml")
     project = read_project(project_toml)
     old_version = project.version
-    new_version = Base.nextpatch(project.version)
+    old_tzdata_version = only(old_version.build)
+
+    # Always fetch the current list of tzdata versions (ignoring any caching).
+    tzdata_versions = TZData.tzdata_versions()
+    i = findfirst(==(old_tzdata_version), tzdata_versions)
+    if i == length(tzdata_versions)
+        new_tzdata_version = tzdata_versions[i]
+        new_version = Base.nextpatch(old_version)
+    else
+        new_tzdata_version = tzdata_versions[i + 1]
+        new_version = Base.nextminor(old_version)
+    end
+
+    tarball_name = "tzjfile-v1-tzdata$(new_tzdata_version).tar.gz"
+
+    # Build tzjfile artifact content
+    # TZData.cleanup(new_tzdata_version, _scratch_dir())
+    compiled_dir = TZData.build(new_tzdata_version, _scratch_dir())
+
+    @info "Creating tarball $tarball_name"
+    tarball_path = joinpath(tempdir(), tarball_name)
+    create_tarball(compiled_dir, tarball_path)
 
     # Include tzdata version in build number
     new_version = VersionNumber(
@@ -137,7 +146,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         new_version.minor,
         new_version.patch,
         (),
-        (tzdata_version,),
+        (new_tzdata_version,),
     )
 
     @info "Bumping package $(project.name) from $old_version -> $new_version"
@@ -156,10 +165,35 @@ if abspath(PROGRAM_FILE) == @__FILE__
         force=true,
     )
 
+    return (;
+        repo_path,
+        project_toml,
+        artifacts_toml,
+        artifact_url,
+        tarball_path,
+        old_tzdata_version,
+        new_tzdata_version,
+        old_version,
+        new_version,
+    )
+end
+
+# TODO: Re-running always bumps version
+if abspath(PROGRAM_FILE) == @__FILE__
+    (;
+        repo_path,
+        new_tzdata_version,
+        new_version,
+        project_toml,
+        artifacts_toml,
+        artifact_url,
+        tarball_path,
+    ) = update_tzdata()
+
     # TODO: Ensure no other files are staged before committing
     @info "Committing and pushing Project.toml and Artifacts.toml"
     branch = "main"
-    message = "Set artifact to tzdata$(tzdata_version) and project to $(new_version)"
+    message = "Set artifact to tzdata$(new_tzdata_version) and project to $(new_version)"
 
     # TODO: ghr and LibGit2 use different credential setups. Double check
     # what BB does here.

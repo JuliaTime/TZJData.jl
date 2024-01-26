@@ -1,0 +1,44 @@
+---
+name: Build
+on:
+  workflow_dispatch:
+    inputs:
+      tzdata_version:
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JULIA_PROJECT: gen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: "1"
+      - uses: julia-actions/cache@v1
+      - name: Instantiate
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.instantiate()
+      - name: Build tzdata
+        id: build
+        shell: julia --color=yes {0}
+        run: |
+          include("make.jl")
+          (; tarball_path) = update_tzdata()
+          @show tarball_path
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "tarball_path=$tarball_path")
+              println(io, "tarball_name=$(basename(tarball_path))")
+          end
+      - name: Debug
+        run: |
+          echo "${{ steps.build.outputs.tarball_path }}"
+          git diff
+      - uses: actions/upload-artifact@v4
+        id: action-artifact
+        with:
+          name: ${{ steps.build.outputs.tarball_name }}
+          path: ${{ steps.build.outputs.tarball_path }}
