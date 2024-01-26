@@ -8,6 +8,7 @@ jobs:
       JULIA_PROJECT: gen
     steps:
       - run: |
+          sleep 30
           mkdir dir
           date > dir/file
       - uses: actions/upload-artifact@v4
