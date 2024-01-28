@@ -17,15 +17,15 @@ jobs:
       key: ${{ steps.key.outputs.key }}
     steps:
       - uses: dorny/paths-filter@v3
-        id: changed
+        id: filter
         with:
           filters: |
-            artifact_toml:
+            modified_artifacts_toml:
               - Artifacts.toml
       - uses: actions/checkout@v4
-        if: ${{ steps.changed.output.artifact_toml == 'true' }}
+        if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
       - name: Check for unpublished artifact
-        if: ${{ steps.changed.output.artifact_toml == 'true' }}
+        if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
         id: key
         shell: julia --color=yes {0}
         run: |
