@@ -75,6 +75,7 @@ jobs:
           end
       - run: |
           cat ~/.julia/artifacts/Overrides.toml
+          rm Artifacts.toml  # Work around Pkg.jl issue #2662
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
