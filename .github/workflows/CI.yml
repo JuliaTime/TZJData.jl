@@ -63,7 +63,7 @@ jobs:
         run: |
           open(joinpath(first(Base.DEPOT_PATH), "artifacts", "Overrides.toml"), "w") do io
               println(io, "[dc5dba14-91b3-4cab-a142-028a31da12f7]")
-              println(io, "tzjdata = "$(pwd)/${{ needs.prerelease.outputs.key }}")
+              println(io, "tzjdata = \"$(pwd)/${{ needs.prerelease.outputs.key }}\"")
           end
       - run: |
           ls -la ${{ needs.prerelease.outputs.key }}
