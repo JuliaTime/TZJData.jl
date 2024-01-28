@@ -68,8 +68,9 @@ jobs:
               println(io, "tzjdata = \"$(pwd)/${{ needs.prerelease.outputs.key }}\"")
           end
       - run: |
-          ls -la ${{ needs.prerelease.outputs.key }}
+          ls -la
           cat ~/.julia/artifacts/Overrides.toml
+          ls -la ${{ needs.prerelease.outputs.key }}
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
