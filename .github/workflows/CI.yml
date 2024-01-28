@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       key: ${{ steps.key.outputs.key }}
+      tarball_filename: ${{ steps.key.outputs.tarball_filename }}
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
@@ -30,9 +31,10 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           include(joinpath(pwd(), "gen", "artifacts.jl"))
-          key = gh_artifact_key()
+          (; key, tarball_filename) = gh_artifact()
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$key")
+              println(io, "tarball_filename=$tarball_filename")
           end
 
   test:
@@ -59,18 +61,21 @@ jobs:
         with:
           workflow: Build.yaml
           name: ${{ needs.prerelease.outputs.key }}
+      - run: |
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }}
+          ls -la
       - shell: julia --color=yes {0}
         run: |
           artifacts_overrides_toml = joinpath(first(Base.DEPOT_PATH), "artifacts", "Overrides.toml")
           mkpath(dirname(artifacts_overrides_toml))
           open(artifacts_overrides_toml, "w") do io
               println(io, "[dc5dba14-91b3-4cab-a142-028a31da12f7]")
-              println(io, "tzjdata = \"$(pwd)/${{ needs.prerelease.outputs.key }}\"")
+              println(io, "tzjdata = \"$(pwd())/${{ needs.prerelease.outputs.tarball_filename }}\"")
           end
       - run: |
           ls -la
           cat ~/.julia/artifacts/Overrides.toml
-          ls -la ${{ needs.prerelease.outputs.key }}
+          ls -la ${{ needs.prerelease.outputs.tarball_filename }}
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
@@ -78,3 +83,6 @@ jobs:
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+
+
+tzjfile-v1-tzdata2023d.tar.gz-ff06bf7c19783925eff4430f1571c5cf81bf9232240dd2ee98d8a66987612f24
