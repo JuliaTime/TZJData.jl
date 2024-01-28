@@ -62,7 +62,8 @@ jobs:
           workflow: Build.yaml
           name: ${{ needs.prerelease.outputs.key }}
       - run: |
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }}
+          mkdir prerelease
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
           ls -la
       - shell: julia --color=yes {0}
         run: |
@@ -70,12 +71,10 @@ jobs:
           mkpath(dirname(artifacts_overrides_toml))
           open(artifacts_overrides_toml, "w") do io
               println(io, "[dc5dba14-91b3-4cab-a142-028a31da12f7]")
-              println(io, "tzjdata = \"$(pwd())/${{ needs.prerelease.outputs.tarball_filename }}\"")
+              println(io, "tzjdata = \"$(pwd())/prerelease\"")
           end
       - run: |
-          ls -la
           cat ~/.julia/artifacts/Overrides.toml
-          ls -la ${{ needs.prerelease.outputs.tarball_filename }}
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
