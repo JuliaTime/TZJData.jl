@@ -11,8 +11,33 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.run_number || 0 }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: changed
+        with:
+          filters: |
+            artifact_toml:
+              - Artifact.toml
+      - uses: actions/checkout@v4
+        if: ${{ steps.changed.output.artifact_toml == 'true' }}
+      - name: Check for unpublished artifact
+        if: ${{ steps.changed.output.artifact_toml == 'true' }}
+        id: key
+        shell: julia --color=yes {0}
+        run: |
+          include(joinpath(pwd(), "gen", "make.jl"))
+          key = gh_artifact_key()
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "key=$key")
+          end
+
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    needs: prerelease
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
@@ -28,6 +53,13 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v3
+      - uses: dawidd6/action-download-artifact@v3
+        if: ${{ needs.prerelease.outputs.key }}
+        id: action-artifact
+        with:
+          workflow: Build.yaml
+          name: ${{ steps.check.output.key }}
+      - run: ls -la
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}

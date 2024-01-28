@@ -28,11 +28,11 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           include(joinpath(pwd(), "gen", "make.jl"))
-          (; tarball_path) = update_tzdata()
+          (; tarball_path, tarball_sha256) = update_tzdata()
           @show tarball_path
           open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "key=$(basename(tarball_path))-$(tarball_sha256)")
               println(io, "tarball_path=$tarball_path")
-              println(io, "tarball_name=$(basename(tarball_path))")
           end
       - name: Debug
         run: |
@@ -41,5 +41,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         id: action-artifact
         with:
-          name: ${{ steps.build.outputs.tarball_name }}
+          name: ${{ steps.build.outputs.key }}
           path: ${{ steps.build.outputs.tarball_path }}
