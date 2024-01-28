@@ -73,7 +73,7 @@ jobs:
               println(
                   io,
                   """
-                  [dc5dba14-91b3-4cab-a142-028a31da12f7]")
+                  [dc5dba14-91b3-4cab-a142-028a31da12f7]
                   tzjdata = "$(pwd())/prerelease"
                   """
               )
@@ -89,7 +89,9 @@ jobs:
               )
           end
       - run: |
+          set -x
           cat ~/.julia/artifacts/Overrides.toml
+          cat Artifacts.toml
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
