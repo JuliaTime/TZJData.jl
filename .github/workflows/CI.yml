@@ -21,7 +21,7 @@ jobs:
         with:
           filters: |
             artifact_toml:
-              - Artifact.toml
+              - Artifacts.toml
       - uses: actions/checkout@v4
         if: ${{ steps.changed.output.artifact_toml == 'true' }}
       - name: Check for unpublished artifact
