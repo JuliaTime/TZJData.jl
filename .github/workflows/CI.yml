@@ -70,12 +70,26 @@ jobs:
           artifacts_overrides_toml = joinpath(first(Base.DEPOT_PATH), "artifacts", "Overrides.toml")
           mkpath(dirname(artifacts_overrides_toml))
           open(artifacts_overrides_toml, "w") do io
-              println(io, "[dc5dba14-91b3-4cab-a142-028a31da12f7]")
-              println(io, "tzjdata = \"$(pwd())/prerelease\"")
+              println(
+                  io,
+                  """
+                  [dc5dba14-91b3-4cab-a142-028a31da12f7]")
+                  tzjdata = "$(pwd())/prerelease"
+                  """
+              )
+          end
+          # Work around Pkg.jl issue #2662
+          open("Artifacts.toml", "w") do io
+              println(
+                  io,
+                  """
+                  [tzjdata]
+                  git-tree-sha1 = "b071cffdb310f5d3ca640c09cfa3dc3f23d450ad"
+                  """
+              )
           end
       - run: |
           cat ~/.julia/artifacts/Overrides.toml
-          rm Artifacts.toml  # Work around Pkg.jl issue #2662
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
