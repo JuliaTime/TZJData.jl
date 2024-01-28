@@ -17,8 +17,6 @@ const GH_RELEASE_ASSET_PATH_REGEX = r"""
     (?<tag>[^/]+)/(?<file_name>[^/]+)$
     """x
 
-const PKG_ROOT = joinpath(@__DIR__(), "..")
-
 function create_tarball(dir, tarball)
     return open(GzipCompressorStream, tarball, "w") do tar
         Tar.create(dir, tar)
@@ -180,16 +178,6 @@ function update_tzdata()
         old_version,
         new_version,
     )
-end
-
-function gh_artifact_key(artifact_toml=joinpath(PKG_ROOT, "Artifacts.toml"))
-    toml = TOML.parsefile(artifact_toml)
-    tarball_artifact = only(toml["tzjdata"]["download"])
-    tarball_filename = basename(tarball_artifact["url"])
-    tarball_sha256 = tarball_artifact["sha256"]
-
-    key = "$(tarball_filename)-$(tarball_sha256)"
-    return key
 end
 
 # TODO: Re-running always bumps version
