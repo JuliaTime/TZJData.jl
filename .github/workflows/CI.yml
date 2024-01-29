@@ -74,13 +74,18 @@ jobs:
           mv Artifacts.toml NewArtifacts.toml
           git checkout origin/${{ github.base_ref }} -- Artifacts.toml
 
-          artifact_path="$HOME/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}"
-          mkdir -p "$artifact_path"
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C "$artifact_path"
+          artifact_dir="$HOME/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}"
+          mkdir -p "$artifact_dir"
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C "$artifact_dir"
+
+          # cat > ~/.julia/artifacts/Overrides.toml <<EOF
+          # [dc5dba14-91b3-4cab-a142-028a31da12f7]
+          # tzjdata = "${{ needs.prerelease.outputs.content_hash }}"
+          # EOF
 
           cat > ~/.julia/artifacts/Overrides.toml <<EOF
           [dc5dba14-91b3-4cab-a142-028a31da12f7]
-          tzjdata = "${{ needs.prerelease.outputs.content_hash }}"
+          tzjdata = "$artifact_dir"
           EOF
       - run: |
           set -x
