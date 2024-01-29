@@ -16,6 +16,7 @@ jobs:
     outputs:
       key: ${{ steps.key.outputs.key }}
       tarball_filename: ${{ steps.key.outputs.tarball_filename }}
+      content_hash: ${{ steps.key.outputs.content_hash }}
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
@@ -31,10 +32,11 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           include(joinpath(pwd(), "gen", "artifacts.jl"))
-          (; key, tarball_filename) = gh_artifact()
+          (; key, tarball_filename, content_hash) = gh_artifact()
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$key")
               println(io, "tarball_filename=$tarball_filename")
+              println(io, "content_hash=$content_hash")
           end
 
   test:
@@ -63,25 +65,22 @@ jobs:
         with:
           workflow: Build.yaml
           name: ${{ needs.prerelease.outputs.key }}
+      - name: Clear cached Overrides.toml
+        if: ${{ !needs.prerelease.outputs.key }}
+        run: rm -f ~/.julia/artifacts/Overrides.toml
       - run: |
           set -x
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
+          mv Artifacts.toml NewArtifacts.toml
           git checkout origin/${{ github.base_ref }} -- Artifacts.toml
           mkdir prerelease
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
-      - shell: julia --color=yes {0}
-        run: |
-          artifacts_overrides_toml = joinpath(first(Base.DEPOT_PATH), "artifacts", "Overrides.toml")
-          mkpath(dirname(artifacts_overrides_toml))
-          open(artifacts_overrides_toml, "w") do io
-              println(
-                  io,
-                  """
-                  [dc5dba14-91b3-4cab-a142-028a31da12f7]
-                  tzjdata = "$(pwd())/prerelease"
-                  """
-              )
-          end
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C ~/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}
+          echo "TARBALL_PATH=${{ needs.prerelease.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
+
+          cat > ~/.julia/artifacts/Overrides.toml <<EOF
+          [dc5dba14-91b3-4cab-a142-028a31da12f7]
+          tzjdata = "${{ needs.prerelease.outputs.content_hash }}"
+          EOF
       - run: |
           set -x
           cat ~/.julia/artifacts/Overrides.toml

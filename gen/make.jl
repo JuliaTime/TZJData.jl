@@ -157,11 +157,12 @@ function update_tzdata()
     artifact_url = "$(pkg_url)/releases/download/$(tag)/$(basename(tarball_path))"
 
     artifacts_toml = joinpath(repo_path, "Artifacts.toml")
+    content_hash = tree_hash_sha1(tarball_path)
     tarball_sha256 = sha256sum(tarball_path)
     bind_artifact!(
         artifacts_toml,
         "tzjdata",
-        tree_hash_sha1(tarball_path);
+        content_hash;
         download_info=[(artifact_url, tarball_sha256)],
         force=true,
     )
