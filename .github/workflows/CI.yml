@@ -64,6 +64,8 @@ jobs:
       - run: |
           mkdir prerelease
           tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
+          # A valid Artifacts.toml file is required: Pkg.jl issue #2662
+          git checkout ${{ github.base_ref }} -- Artifacts.toml
           ls -la
       - shell: julia --color=yes {0}
         run: |
@@ -75,14 +77,6 @@ jobs:
                   """
                   [dc5dba14-91b3-4cab-a142-028a31da12f7]
                   tzjdata = "$(pwd())/prerelease"
-                  """
-              )
-          end
-          # Work around Pkg.jl issue #2662
-          open("Artifacts.toml", "w") do io
-              println(
-                  io,
-                  """
                   """
               )
           end
