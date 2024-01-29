@@ -83,8 +83,6 @@ jobs:
               println(
                   io,
                   """
-                  [tzjdata]
-                  git-tree-sha1 = "b071cffdb310f5d3ca640c09cfa3dc3f23d450ad"
                   """
               )
           end
