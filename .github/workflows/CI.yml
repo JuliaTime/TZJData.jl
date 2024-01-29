@@ -62,11 +62,11 @@ jobs:
           workflow: Build.yaml
           name: ${{ needs.prerelease.outputs.key }}
       - run: |
-          mkdir prerelease
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
+          set -x
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
           git checkout ${{ github.base_ref }} -- Artifacts.toml
-          ls -la
+          mkdir prerelease
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
       - shell: julia --color=yes {0}
         run: |
           artifacts_overrides_toml = joinpath(first(Base.DEPOT_PATH), "artifacts", "Overrides.toml")
