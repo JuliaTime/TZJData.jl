@@ -73,9 +73,10 @@ jobs:
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
           mv Artifacts.toml NewArtifacts.toml
           git checkout origin/${{ github.base_ref }} -- Artifacts.toml
-          mkdir prerelease
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C ~/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}
-          echo "TARBALL_PATH=${{ needs.prerelease.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
+
+          artifact_path="$HOME/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}"
+          mkdir -p "$artifact_path"
+          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C "$artifact_path"
 
           cat > ~/.julia/artifacts/Overrides.toml <<EOF
           [dc5dba14-91b3-4cab-a142-028a31da12f7]
