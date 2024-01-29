@@ -66,7 +66,7 @@ jobs:
       - run: |
           set -x
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
-          git checkout ${{ github.base_ref }} -- Artifacts.toml
+          git checkout origin/${{ github.base_ref }} -- Artifacts.toml
           mkdir prerelease
           tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C prerelease
       - shell: julia --color=yes {0}
