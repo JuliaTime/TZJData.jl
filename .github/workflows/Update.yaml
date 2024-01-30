@@ -2,7 +2,7 @@
 name: Update
 on:
   schedule:
-    - cron: "44 9 * * * *"  # Every day at 09:44 UTC
+    - cron: "44 9 * * *"  # Every day at 09:44 UTC
   workflow_dispatch: {}
 jobs:
   artifacts:
