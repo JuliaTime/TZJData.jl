@@ -33,7 +33,7 @@ jobs:
         id: action-artifact
         with:
           workflow: Update.yaml
-          name: ${{ needs.details.outputs.key }}
+          name: ${{ steps.details.outputs.key }}
       # As `ncipollo/release-action`'s `artifactErrorsFailBuild` input will still cause a release
       # to be created we'll perform this check to fail earlier.
       - name: Validate artifact retrieved
