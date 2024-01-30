@@ -33,8 +33,7 @@ jobs:
         id: action-artifact
         with:
           workflow: Update.yaml
-          name: ${{ needs.details.outputs.key }}
-      - run: ls -l
+          name: ${{ steps.details.outputs.key }}
       - name: Build Changelog
         id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v4

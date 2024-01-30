@@ -71,15 +71,20 @@ jobs:
       - name: Clear cached Overrides.toml
         if: ${{ !needs.unpublished.outputs.key }}
         run: rm -f ~/.julia/artifacts/Overrides.toml
-      - run: |
-          set -x
+      - name: Create artifacts Overrides.toml
+        if: ${{ needs.unpublished.outputs.key }}
+        run: |
+          set -ex
+          tarball_path="$PWD/${{ needs.unpublished.outputs.tarball_filename }}"
+          [ -f "$tarball_path" ] || exit 1
+
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
           mv Artifacts.toml NewArtifacts.toml
           git checkout origin/${{ github.base_ref }} -- Artifacts.toml
 
           artifact_dir="$HOME/.julia/artifacts/${{ needs.unpublished.outputs.content_hash }}"
           mkdir -p "$artifact_dir"
-          tar xvf ${{ needs.unpublished.outputs.tarball_filename }} -C "$artifact_dir"
+          tar xvf "$tarball_path" -C "$artifact_dir"
 
           # Why doesn't this work?
           # cat > ~/.julia/artifacts/Overrides.toml <<EOF
@@ -93,8 +98,10 @@ jobs:
           EOF
 
           echo "TZJDATA_ARTIFACT_TOML=$PWD/NewArtifacts.toml" | tee -a "$GITHUB_ENV"
-          echo "TZJDATA_TARBALL_PATH=$PWD/${{ needs.unpublished.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
-      - run: |
+          echo "TZJDATA_TARBALL_PATH=$tarball_path" | tee -a "$GITHUB_ENV"
+      - name: Debug
+        if: ${{ needs.unpublished.outputs.key }}
+        run: |
           set -x
           cat ~/.julia/artifacts/Overrides.toml
           cat Artifacts.toml
