@@ -2,7 +2,8 @@
 name: Update
 on:
   schedule:
-    - cron: "*/5 * * * *"  # Every 5 minutes (for now)
+    - cron: "44 9 * * *"  # Every day at 09:44 UTC
+  workflow_dispatch: {}
 jobs:
   artifacts:
     name: Artifacts
