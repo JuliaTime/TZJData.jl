@@ -19,6 +19,8 @@ jobs:
       JULIA_PROJECT: gen
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: origin/HEAD
       - uses: julia-actions/setup-julia@v1
         with:
           version: "1"
