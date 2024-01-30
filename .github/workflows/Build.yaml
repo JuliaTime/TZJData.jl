@@ -55,6 +55,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
+          base: main  # Shouldn't be required for `workflow_dispatch`
           add-paths: |
             Project.toml
             Artifacts.toml
