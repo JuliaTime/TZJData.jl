@@ -37,6 +37,7 @@ jobs:
           include(joinpath(pwd(), "gen", "make.jl"))
           (; tarball_path, tarball_sha256, new_version, commit_message) = update_tzdata()
           key = basename(tarball_path) * "-" * tarball_sha256
+          commit_message *= " (1)"
           @show key tarball_path commit_message
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$key")
@@ -45,6 +46,8 @@ jobs:
           end
           println("workflow_ref=${{ github.workflow_ref }}")
       - run: git diff
+      # Store the Julia artifact tarball as a GitHub actions artifact. This will allow us to retrieve this
+      # tarball from other workflows.
       - uses: actions/upload-artifact@v4
         id: action-artifact
         with:
