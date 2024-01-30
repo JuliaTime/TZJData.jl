@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "!Artifacts.toml"  # Impending package release. Will trigger via `tags`
     tags: ["*"]
 concurrency:
   # Skip intermediate builds: on all builds except on the "main" branch.
@@ -11,8 +13,38 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.run_number || 0 }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
+  unpublished:
+    name: Artifact Check
+    runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+      tarball_filename: ${{ steps.key.outputs.tarball_filename }}
+      content_hash: ${{ steps.key.outputs.content_hash }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            modified_artifacts_toml:
+              - Artifacts.toml
+      - uses: actions/checkout@v4
+        if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
+      - name: Check for unpublished artifact
+        if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
+        id: key
+        shell: julia --color=yes {0}
+        run: |
+          include(joinpath(pwd(), "gen", "artifacts.jl"))
+          (; key, tarball_filename, content_hash) = gh_artifact()
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "key=$key")
+              println(io, "tarball_filename=$tarball_filename")
+              println(io, "content_hash=$content_hash")
+          end
+
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    needs: unpublished
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
@@ -28,6 +60,51 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Allows checkout of Artifacts.toml from base ref
+      - uses: dawidd6/action-download-artifact@v3
+        if: ${{ needs.unpublished.outputs.key }}
+        id: action-artifact
+        with:
+          workflow: Update.yaml
+          name: ${{ needs.unpublished.outputs.key }}
+      - name: Clear cached Overrides.toml
+        if: ${{ !needs.unpublished.outputs.key }}
+        run: rm -f ~/.julia/artifacts/Overrides.toml
+      - name: Create artifacts Overrides.toml
+        if: ${{ needs.unpublished.outputs.key }}
+        run: |
+          set -ex
+          tarball_path="$PWD/${{ needs.unpublished.outputs.tarball_filename }}"
+          [ -f "$tarball_path" ] || exit 1
+
+          # A valid Artifacts.toml file is required: Pkg.jl issue #2662
+          mv Artifacts.toml NewArtifacts.toml
+          git checkout origin/${{ github.base_ref }} -- Artifacts.toml
+
+          artifact_dir="$HOME/.julia/artifacts/${{ needs.unpublished.outputs.content_hash }}"
+          mkdir -p "$artifact_dir"
+          tar xvf "$tarball_path" -C "$artifact_dir"
+
+          # Why doesn't this work?
+          # cat > ~/.julia/artifacts/Overrides.toml <<EOF
+          # [dc5dba14-91b3-4cab-a142-028a31da12f7]
+          # tzjdata = "${{ needs.unpublished.outputs.content_hash }}"
+          # EOF
+
+          cat > ~/.julia/artifacts/Overrides.toml <<EOF
+          [dc5dba14-91b3-4cab-a142-028a31da12f7]
+          tzjdata = "$artifact_dir"
+          EOF
+
+          echo "TZJDATA_ARTIFACT_TOML=$PWD/NewArtifacts.toml" | tee -a "$GITHUB_ENV"
+          echo "TZJDATA_TARBALL_PATH=$tarball_path" | tee -a "$GITHUB_ENV"
+      - name: Debug
+        if: ${{ needs.unpublished.outputs.key }}
+        run: |
+          set -x
+          cat ~/.julia/artifacts/Overrides.toml
+          cat Artifacts.toml
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}

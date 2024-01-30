@@ -1,0 +1,50 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Artifacts.toml"
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    # These permissions are needed to:
+    # - Create a GitHub release: https://github.com/ncipollo/release-action#notes
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine artifact details
+        id: details
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg.Types: read_project
+          include(joinpath(pwd(), "gen", "artifacts.jl"))
+          (; key, tarball_filename) = gh_artifact()
+          project = read_project("Project.toml")
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "key=$key")
+              println(io, "tarball_filename=$tarball_filename")
+              println(io, "tag=v$(project.version)")
+          end
+      - uses: dawidd6/action-download-artifact@v3
+        id: action-artifact
+        with:
+          workflow: Update.yaml
+          name: ${{ steps.details.outputs.key }}
+      # As `ncipollo/release-action`'s `artifactErrorsFailBuild` input will still cause a release
+      # to be created we'll perform this check to fail earlier.
+      - name: Validate artifact retrieved
+        run: |
+          [ -f "${{ steps.details.outputs.tarball_filename }}" ] || exit 1
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.details.outputs.tag }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          artifacts: ${{ steps.details.outputs.tarball_filename }}
+          artifactErrorsFailBuild: true
