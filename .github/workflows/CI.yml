@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   unpublished:
-    name: Check for unpublished artifact
+    name: Artifact Check
     runs-on: ubuntu-latest
     outputs:
       key: ${{ steps.key.outputs.key }}

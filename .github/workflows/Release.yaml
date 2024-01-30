@@ -16,7 +16,7 @@ jobs:
         id: details
         shell: julia --color=yes {0}
         run: |
-          using Pkg.Type: read_project
+          using Pkg.Types: read_project
           include(joinpath(pwd(), "gen", "artifacts.jl"))
           (; key, tarball_filename) = gh_artifact()
           project = read_project("Project.toml")

@@ -60,7 +60,7 @@ end
 
             url = toml["tzjdata"]["download"][1]["url"]
             @test contains(url, "/v$(project.version)/")
-            @test basename(url) == basename(tarball_path))
+            @test basename(url) == basename(tarball_path)
             @test contains(basename(url), r"tzdata(?<version>\d{2}\d{2}?[a-z])")
         end
     end
