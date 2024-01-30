@@ -58,7 +58,7 @@ end
 
             @test artifacts["tzjdata"]["git-tree-sha1"] == tree_hash_sha1(tarball_path)
             @test length(artifacts["tzjdata"]["download"]) == 1
-            @test artifacts["tzjdata"]["download"][1]["sha256"] == sha256sum(tarball_path)
+            @test artifacts["tzjdata"]["download"][1]["sha256"] == string(sha256sum(tarball_path))
 
             url = artifacts["tzjdata"]["download"][1]["url"]
             @test contains(url, "/v$(project.version)/")
