@@ -1,5 +1,7 @@
+using Artifacts: Artifacts
 using Base: SHA1
 using CodecZlib: GzipDecompressorStream
+using Pkg.Types: read_project
 using SHA: sha256
 using TZJData
 using Tar: Tar
@@ -52,13 +54,13 @@ end
         tarball_path = get(ENV, "TZJDATA_TARBALL_PATH", nothing)
         if !isnothing(artifact_toml) && !isnothing(tarball_path)
             project = read_project(joinpath(@__DIR__(), "..", "Project.toml"))
-            toml = TOML.parsefile(artifact_toml)
+            artifacts = Artifacts.parse_toml(artifact_toml)
 
-            @test toml["tzjdata"]["git-tree-sha1"] == tree_hash_sha1(tarball_path)
-            @test length(toml["tzjdata"]["download"]) == 1
-            @test toml["tzjdata"]["download"][1]["sha256"] == sha256sum(tarball_path)
+            @test artifacts["tzjdata"]["git-tree-sha1"] == tree_hash_sha1(tarball_path)
+            @test length(artifacts["tzjdata"]["download"]) == 1
+            @test artifacts["tzjdata"]["download"][1]["sha256"] == sha256sum(tarball_path)
 
-            url = toml["tzjdata"]["download"][1]["url"]
+            url = artifacts["tzjdata"]["download"][1]["url"]
             @test contains(url, "/v$(project.version)/")
             @test basename(url) == basename(tarball_path)
             @test contains(basename(url), r"tzdata(?<version>\d{2}\d{2}?[a-z])")
