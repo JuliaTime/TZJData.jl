@@ -10,6 +10,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # These permissions are needed to:
+    # - Create PRs: https://github.com/marketplace/actions/create-pull-request#workflow-permissions
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       JULIA_PROJECT: gen
     steps:
