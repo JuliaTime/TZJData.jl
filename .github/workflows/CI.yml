@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "!Artifacts.toml"  # Impending package release. Will trigger via `tags`
     tags: ["*"]
 concurrency:
   # Skip intermediate builds: on all builds except on the "main" branch.

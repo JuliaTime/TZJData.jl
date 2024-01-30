@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - Artifacts.toml
+      - "Artifacts.toml"
 jobs:
   publish:
     name: Publish
@@ -30,12 +30,12 @@ jobs:
         with:
           workflow: Update.yaml
           name: ${{ needs.details.outputs.key }}
-      # - name: Build Changelog
-      #   id: build_changelog
-      #   uses: mikepenz/release-changelog-builder-action@v4
-      # - name: Publish Release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     tag: ${{ steps.details.outputs.tag }}
-      #     artifacts: ./${{ steps.details.outputs.tarball_filename }}
-      #     body: ${{ steps.build_changelog.outputs.changelog }}
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.details.outputs.tag }}
+          artifacts: ./${{ steps.details.outputs.tarball_filename }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
