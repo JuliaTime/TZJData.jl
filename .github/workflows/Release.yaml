@@ -37,5 +37,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.details.outputs.tag }}
-          artifacts: ./${{ steps.details.outputs.tarball_filename }}
+          artifacts: ${{ steps.details.outputs.tarball_filename }}
           body: ${{ steps.build_changelog.outputs.changelog }}
