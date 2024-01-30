@@ -1,11 +1,12 @@
 ---
-name: Build
+name: Update
 on:
   pull_request: {}
   schedule:
     - cron: "*/5 * * * *"  # Every 5 minutes (for now)
 jobs:
-  build:
+  artifacts:
+    name: Artifacts
     runs-on: ubuntu-latest
     # These permissions are needed to:
     # - Create PRs: https://github.com/marketplace/actions/create-pull-request#workflow-permissions

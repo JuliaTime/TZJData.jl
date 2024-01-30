@@ -64,7 +64,7 @@ jobs:
         if: ${{ needs.unpublished.outputs.key }}
         id: action-artifact
         with:
-          workflow: Build.yaml
+          workflow: Update.yaml
           name: ${{ needs.unpublished.outputs.key }}
       - name: Clear cached Overrides.toml
         if: ${{ !needs.unpublished.outputs.key }}

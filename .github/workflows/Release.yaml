@@ -28,7 +28,7 @@ jobs:
       - uses: dawidd6/action-download-artifact@v3
         id: action-artifact
         with:
-          workflow: Build.yaml
+          workflow: Update.yaml
           name: ${{ needs.details.outputs.key }}
       # - name: Build Changelog
       #   id: build_changelog
