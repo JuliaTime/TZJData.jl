@@ -36,7 +36,7 @@ jobs:
               println(io, "commit_message=$commit_message")
               println(io, "branch=gh/v$(new_version)")
           end
-          println(io, "commit_message=$commit_message")
+          println("commit_message=$commit_message")
           println("branch=gh/v$(new_version)")
       - name: Debug
         run: |
