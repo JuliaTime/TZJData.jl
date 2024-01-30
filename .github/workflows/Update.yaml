@@ -1,7 +1,6 @@
 ---
 name: Update
 on:
-  pull_request: {}
   schedule:
     - cron: "*/5 * * * *"  # Every 5 minutes (for now)
 jobs:
