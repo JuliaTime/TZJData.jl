@@ -11,7 +11,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.run_number || 0 }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  prerelease:
+  unpublished:
+    name: Check for unpublished artifact
     runs-on: ubuntu-latest
     outputs:
       key: ${{ steps.key.outputs.key }}
@@ -41,7 +42,7 @@ jobs:
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    needs: prerelease
+    needs: unpublished
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
@@ -60,13 +61,13 @@ jobs:
         with:
           fetch-depth: 0  # Allows checkout of Artifacts.toml from base ref
       - uses: dawidd6/action-download-artifact@v3
-        if: ${{ needs.prerelease.outputs.key }}
+        if: ${{ needs.unpublished.outputs.key }}
         id: action-artifact
         with:
           workflow: Build.yaml
-          name: ${{ needs.prerelease.outputs.key }}
+          name: ${{ needs.unpublished.outputs.key }}
       - name: Clear cached Overrides.toml
-        if: ${{ !needs.prerelease.outputs.key }}
+        if: ${{ !needs.unpublished.outputs.key }}
         run: rm -f ~/.julia/artifacts/Overrides.toml
       - run: |
           set -x
@@ -74,14 +75,14 @@ jobs:
           mv Artifacts.toml NewArtifacts.toml
           git checkout origin/${{ github.base_ref }} -- Artifacts.toml
 
-          artifact_dir="$HOME/.julia/artifacts/${{ needs.prerelease.outputs.content_hash }}"
+          artifact_dir="$HOME/.julia/artifacts/${{ needs.unpublished.outputs.content_hash }}"
           mkdir -p "$artifact_dir"
-          tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C "$artifact_dir"
+          tar xvf ${{ needs.unpublished.outputs.tarball_filename }} -C "$artifact_dir"
 
           # Why doesn't this work?
           # cat > ~/.julia/artifacts/Overrides.toml <<EOF
           # [dc5dba14-91b3-4cab-a142-028a31da12f7]
-          # tzjdata = "${{ needs.prerelease.outputs.content_hash }}"
+          # tzjdata = "${{ needs.unpublished.outputs.content_hash }}"
           # EOF
 
           cat > ~/.julia/artifacts/Overrides.toml <<EOF
@@ -90,7 +91,7 @@ jobs:
           EOF
 
           echo "TZJDATA_ARTIFACT_TOML=$PWD/NewArtifacts.toml" | tee -a "$GITHUB_ENV"
-          echo "TZJDATA_TARBALL_PATH=$PWD/${{ needs.prerelease.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
+          echo "TZJDATA_TARBALL_PATH=$PWD/${{ needs.unpublished.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
       - run: |
           set -x
           cat ~/.julia/artifacts/Overrides.toml
