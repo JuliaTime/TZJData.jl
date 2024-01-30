@@ -78,6 +78,7 @@ jobs:
           mkdir -p "$artifact_dir"
           tar xvf ${{ needs.prerelease.outputs.tarball_filename }} -C "$artifact_dir"
 
+          # Why doesn't this work?
           # cat > ~/.julia/artifacts/Overrides.toml <<EOF
           # [dc5dba14-91b3-4cab-a142-028a31da12f7]
           # tzjdata = "${{ needs.prerelease.outputs.content_hash }}"
@@ -87,6 +88,9 @@ jobs:
           [dc5dba14-91b3-4cab-a142-028a31da12f7]
           tzjdata = "$artifact_dir"
           EOF
+
+          echo "TZJDATA_ARTIFACT_TOML=$PWD/NewArtifacts.toml" | tee -a "$GITHUB_ENV"
+          echo "TZJDATA_TARBALL_PATH=$PWD/${{ needs.prerelease.outputs.tarball_filename }}" | tee -a "$GITHUB_ENV"
       - run: |
           set -x
           cat ~/.julia/artifacts/Overrides.toml
