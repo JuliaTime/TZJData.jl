@@ -1,12 +1,9 @@
 ---
 name: Build
 on:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      tzdata_version:
-        required: true
-        type: string
+  pull_request: {}
+  schedule:
+    - cron: "*/5 * * * *"  # Every 5 minutes (for now)
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -63,5 +60,6 @@ jobs:
             Project.toml
             Artifacts.toml
           commit-message: ${{ steps.build.outputs.commit_message }}
-          branch: gh/update-tzdata1
-          token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}
+          branch: gh/update-tzdata
+          delete-branch: ${{ github.event_name == 'pull_request' }}
+          token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}  # TODO: Fine-grained token expires
