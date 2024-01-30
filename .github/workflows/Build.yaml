@@ -37,7 +37,6 @@ jobs:
           include(joinpath(pwd(), "gen", "make.jl"))
           (; tarball_path, tarball_sha256, new_version, commit_message) = update_tzdata()
           key = basename(tarball_path) * "-" * tarball_sha256
-          commit_message *= " (1)"
           @show key tarball_path commit_message
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$key")
@@ -64,5 +63,5 @@ jobs:
             Project.toml
             Artifacts.toml
           commit-message: ${{ steps.build.outputs.commit_message }}
-          branch: gh/update-tzdata
+          branch: gh/update-tzdata1
           token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}
