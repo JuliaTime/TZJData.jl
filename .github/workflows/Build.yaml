@@ -62,3 +62,4 @@ jobs:
             Artifacts.toml
           commit-message: ${{ steps.build.outputs.commit_message }}
           branch: gh/update-tzdata
+          token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}
