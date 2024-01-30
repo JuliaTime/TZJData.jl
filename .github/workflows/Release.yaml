@@ -10,6 +10,10 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    # These permissions are needed to:
+    # - Create a GitHub release: https://github.com/ncipollo/release-action#notes
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Determine artifact details
@@ -30,6 +34,7 @@ jobs:
         with:
           workflow: Update.yaml
           name: ${{ needs.details.outputs.key }}
+      - run: ls -l
       - name: Build Changelog
         id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v4
@@ -37,5 +42,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.details.outputs.tag }}
-          artifacts: ${{ steps.details.outputs.tarball_filename }}
           body: ${{ steps.build_changelog.outputs.changelog }}
+          artifacts: ${{ steps.details.outputs.tarball_filename }}
+          artifactErrorsFailBuild: true
