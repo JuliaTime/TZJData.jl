@@ -167,6 +167,8 @@ function update_tzdata()
         force=true,
     )
 
+    commit_message = "Set artifact to tzdata$(new_tzdata_version) and project to $(new_version)"
+
     return (;
         repo_path,
         project_toml,
@@ -178,6 +180,7 @@ function update_tzdata()
         new_tzdata_version,
         old_version,
         new_version,
+        commit_message,
     )
 end
 
@@ -191,12 +194,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
         artifacts_toml,
         artifact_url,
         tarball_path,
+        commit_message,
     ) = update_tzdata()
 
     # TODO: Ensure no other files are staged before committing
     @info "Committing and pushing Project.toml and Artifacts.toml"
     branch = "main"
-    message = "Set artifact to tzdata$(new_tzdata_version) and project to $(new_version)"
 
     # TODO: ghr and LibGit2 use different credential setups. Double check
     # what BB does here.
@@ -205,7 +208,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             # TODO: This allows empty commits
             LibGit2.add!(repo, basename(artifacts_toml))
             LibGit2.add!(repo, basename(project_toml))
-            LibGit2.commit(repo, message)
+            LibGit2.commit(repo, commit_message)
 
             # Same as "refs/heads/$branch" but fails if branch doesn't exist locally
             branch_ref = LibGit2.lookup_branch(repo, branch)

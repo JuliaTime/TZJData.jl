@@ -28,12 +28,16 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           include(joinpath(pwd(), "gen", "make.jl"))
-          (; tarball_path, tarball_sha256) = update_tzdata()
+          (; tarball_path, tarball_sha256, new_version, commit_message) = update_tzdata()
           @show tarball_path
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$(basename(tarball_path))-$(tarball_sha256)")
               println(io, "tarball_path=$tarball_path")
+              println(io, "commit_message=$commit_message")
+              println(io, "branch=gh/v$(new_version)")
           end
+          println(io, "commit_message=$commit_message")
+          println("branch=gh/v$(new_version)")
       - name: Debug
         run: |
           echo "${{ steps.build.outputs.tarball_path }}"
@@ -43,3 +47,11 @@ jobs:
         with:
           name: ${{ steps.build.outputs.key }}
           path: ${{ steps.build.outputs.tarball_path }}
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v5
+      #   with:
+      #     add-paths: |
+      #       Project.toml
+      #       Artifacts.toml
+      #     commit-message: ${{ steps.build.outputs.commit_message }}
+      #     branch: ${{ steps.build.outputs.branch }}
