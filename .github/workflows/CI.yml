@@ -22,14 +22,13 @@ jobs:
       tarball_filename: ${{ steps.key.outputs.tarball_filename }}
       content_hash: ${{ steps.key.outputs.content_hash }}
     steps:
+      - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             modified_artifacts_toml:
               - Artifacts.toml
-      - uses: actions/checkout@v4
-        if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
       - name: Check for unpublished artifact
         if: ${{ steps.filter.outputs.modified_artifacts_toml == 'true' }}
         id: key
