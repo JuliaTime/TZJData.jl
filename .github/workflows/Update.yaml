@@ -80,3 +80,17 @@ jobs:
           commit-message: ${{ steps.build.outputs.commit_message }}
           branch: gh/update-tzdata
           token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}  # TODO: Fine-grained token expires
+
+  # Work around having GitHub suspend the scheduled workflow if there is no commit activity
+  # for the past 60 days. As this repo doesn't get much activity beyond artifact updates
+  # this can be quite annoying.
+  keepalive:
+    name: Keepalive
+    runs-on: ubuntu-latest
+    # These permissions are needed to:
+    # - Keep the workflow alive: https://github.com/marketplace/actions/keepalive-workflow#github-api-keepalive-workflow---default-for-github-actions-users
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
