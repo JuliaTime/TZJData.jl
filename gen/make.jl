@@ -109,7 +109,29 @@ function upload_to_github_release(owner, repo_name, commit, tag, path; token=ENV
     run(cmd)
 end
 
-function update_tzdata()
+function next_tzdata_version(tzdata_version::AbstractString)
+    # Always fetch the current list of tzdata versions (ignoring any caching).
+    tzdata_versions = TZData.tzdata_versions()
+    i = findfirst(==(tzdata_version), tzdata_versions)
+    if !isnothing(i)
+        return i < length(tzdata_versions) ? tzdata_versions[i + 1] : nothing
+    else
+        error("Unable to locate tzdata version $tzdata_version in list of tzdata versions")
+    end
+end
+
+function is_pkg_tzdata_version_outdated()
+    repo_path = joinpath(@__DIR__, "..")
+
+    # Read Project.toml
+    project_toml = joinpath(repo_path, "Project.toml")
+    project = read_project(project_toml)
+    tzdata_version = only(project.version.build)
+
+    return !isnothing(next_tzdata_version(tzdata_version))
+end
+
+function update_tzdata(; force::Bool=false)
     repo_path = joinpath(@__DIR__, "..")
     pkg_url = remote_url(repo_path)
 
@@ -119,14 +141,13 @@ function update_tzdata()
     old_version = project.version
     old_tzdata_version = only(old_version.build)
 
-    # Always fetch the current list of tzdata versions (ignoring any caching).
-    tzdata_versions = TZData.tzdata_versions()
-    i = findfirst(==(old_tzdata_version), tzdata_versions)
-    if i == length(tzdata_versions)
-        new_tzdata_version = tzdata_versions[i]
+    # If `old_tzdata_version` is already the latest version then `nothing` will be returned
+    # so we'll perform a rebuild of the current tzdata version.
+    new_tzdata_version = next_tzdata_version(old_tzdata_version)
+    if isnothing(new_tzdata_version)
+        new_tzdata_version = tzdata_version
         new_version = Base.nextpatch(old_version)
     else
-        new_tzdata_version = tzdata_versions[i + 1]
         new_version = Base.nextminor(old_version)
     end
 
