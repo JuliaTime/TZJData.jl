@@ -1,6 +1,14 @@
 ---
+# Automatically builds new TZJData artifacts and creates a PR with the associated
+# changes to the `Project.toml` and `Artifacts.toml`. Once the PR has been merged the
+# `Release.yaml` workflow will generate a GitHub release with the assets to fufill the
+# artifact URLs within the `Artifacts.toml`.
+
 name: Update
 on:
+  pull_request:
+    paths:
+      - .github/workflows/Update.yaml
   schedule:
     - cron: "44 9 * * *"  # Every day at 09:44 UTC
   workflow_dispatch: {}
@@ -18,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+          ref: ${{ github.event.pull_request.head.sha || 'main' }}
       - uses: julia-actions/setup-julia@v1
         with:
           version: "1"
@@ -33,25 +41,34 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           include(joinpath(pwd(), "gen", "make.jl"))
-          (; tarball_path, tarball_sha256, new_version, commit_message) = update_tzdata()
-          key = basename(tarball_path) * "-" * tarball_sha256
-          @show key tarball_path commit_message
-          open(ENV["GITHUB_OUTPUT"], "a") do io
-              println(io, "key=$key")
-              println(io, "tarball_path=$tarball_path")
-              println(io, "commit_message=$commit_message")
+          if is_pkg_tzdata_version_outdated()
+              (; tarball_path, tarball_sha256, new_version, commit_message) = update_tzdata()
+              key = basename(tarball_path) * "-" * tarball_sha256
+              @show key tarball_path commit_message
+              open(ENV["GITHUB_OUTPUT"], "a") do io
+                  println(io, "updated=true")
+                  println(io, "key=$key")
+                  println(io, "tarball_path=$tarball_path")
+                  println(io, "commit_message=$commit_message")
+              end
+          else
+              open(ENV["GITHUB_OUTPUT"], "a") do io
+                  println(io, "updated=false")
+              end
           end
           println("workflow_ref=${{ github.workflow_ref }}")
       - run: git diff
       # Store the Julia artifact tarball as a GitHub actions artifact. This will allow us to retrieve this
       # tarball from other workflows.
       - uses: actions/upload-artifact@v4
+        if: ${{ steps.build.outputs.updated == 'true' }}
         id: action-artifact
         with:
           name: ${{ steps.build.outputs.key }}
           path: ${{ steps.build.outputs.tarball_path }}
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
+        if: ${{ steps.build.outputs.updated == 'true' }}
         with:
           base: main  # Shouldn't be required for `workflow_dispatch`
           title: ${{ steps.build.outputs.commit_message }}
@@ -62,5 +79,18 @@ jobs:
             Artifacts.toml
           commit-message: ${{ steps.build.outputs.commit_message }}
           branch: gh/update-tzdata
-          delete-branch: ${{ github.event_name == 'pull_request' }}
           token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}  # TODO: Fine-grained token expires
+
+  # Work around having GitHub suspend the scheduled workflow if there is no commit activity
+  # for the past 60 days. As this repo doesn't get much activity beyond artifact updates
+  # this can be quite annoying.
+  keepalive:
+    name: Keepalive
+    runs-on: ubuntu-latest
+    # These permissions are needed to:
+    # - Keep the workflow alive: https://github.com/marketplace/actions/keepalive-workflow#github-api-keepalive-workflow---default-for-github-actions-users
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
