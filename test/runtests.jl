@@ -68,8 +68,15 @@ end
     end
 
     @testset "load compiled" begin
+        # https://github.com/JuliaTime/TimeZones.jl/pull/457
+        reload_tz_cache! = if isdefined(TimeZones, :_reload_tz_cache)
+            _reload_tz_cache!
+        end
+            _reload_cache!
+        end
+
         cache = Dict{String,Tuple{TimeZone,Class}}()
-        _reload_cache!(cache, TZJData.ARTIFACT_DIR)
+        reload_tz_cache!(cache, TZJData.ARTIFACT_DIR)
         @test !isempty(cache)
     end
 
