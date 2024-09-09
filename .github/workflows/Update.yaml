@@ -66,6 +66,11 @@ jobs:
         with:
           name: ${{ steps.build.outputs.key }}
           path: ${{ steps.build.outputs.tarball_path }}
+      # We need to introduce a slight delay after we upload the artifact to ensure the CI
+      # checks run for the PR can locate the artifact.
+      - name: Delay PR creation
+        if: ${{ steps.build.outputs.updated == 'true' }}
+        run: sleep 15
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         if: ${{ steps.build.outputs.updated == 'true' }}

@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - "Artifacts.toml"  # Impending package release. Will trigger via `tags`
     tags: ["*"]
 concurrency:
   # Skip intermediate builds: on all builds except on the "main" branch.
@@ -16,6 +14,7 @@ concurrency:
 jobs:
   unpublished:
     name: Artifact Check
+    if: ${{ github.ref_type != 'tag' }}  # Always try using published artifacts for tags
     runs-on: ubuntu-latest
     outputs:
       key: ${{ steps.key.outputs.key }}
@@ -80,7 +79,7 @@ jobs:
 
           # A valid Artifacts.toml file is required: Pkg.jl issue #2662
           mv Artifacts.toml NewArtifacts.toml
-          git checkout origin/${{ github.base_ref }} -- Artifacts.toml
+          git checkout ${{ github.ref != 'refs/heads/main' && 'origin/main' || 'origin/main^' }} -- Artifacts.toml
 
           artifact_dir="$HOME/.julia/artifacts/${{ needs.unpublished.outputs.content_hash }}"
           mkdir -p "$artifact_dir"
