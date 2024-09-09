@@ -59,3 +59,4 @@ jobs:
           body: ${{ steps.build_changelog.outputs.changelog }}
           artifacts: ${{ steps.details.outputs.tarball_filename }}
           artifactErrorsFailBuild: true
+          token: ${{ secrets.TZJDATA_UPDATE_TOKEN }}  # Use PAT to trigger workflows on tag creation
