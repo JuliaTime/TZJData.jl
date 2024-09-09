@@ -6,13 +6,7 @@ on:
       - main
     paths:
       - "Artifacts.toml"
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: The Git branch or commit SHA which we want to publish a release for.
-        type: string
-        requried: true
-        default: main
+  workflow_dispatch: {}
 jobs:
   publish:
     name: Publish
@@ -23,8 +17,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.sha }}
       - name: Determine artifact details
         id: details
         shell: julia --color=yes {0}
