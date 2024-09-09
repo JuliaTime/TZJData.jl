@@ -38,11 +38,12 @@ jobs:
               println(io, "tarball_filename=$tarball_filename")
               println(io, "tag=v$(project.version)")
           end
-      - uses: dawidd6/action-download-artifact@v3
+      - uses: dawidd6/action-download-artifact@v6
         id: action-artifact
         with:
           workflow: Update.yaml
           name: ${{ steps.details.outputs.key }}
+          check_artifacts: true  # Check more than just the latest "Update" workflow
       # As `ncipollo/release-action`'s `artifactErrorsFailBuild` input will still cause a release
       # to be created we'll perform this check to fail earlier.
       - name: Validate artifact retrieved
