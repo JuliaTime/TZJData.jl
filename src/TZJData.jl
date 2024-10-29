@@ -4,6 +4,8 @@ using Artifacts
 
 const ARTIFACT_DIR = artifact"tzjdata"
 
+artifact_dir() = artifact"tzjdata"
+
 const TZDATA_VERSION = let
     artifact_dict = Artifacts.parse_toml(joinpath(@__DIR__, "..", "Artifacts.toml"))
     url = first(artifact_dict["tzjdata"]["download"])["url"]
