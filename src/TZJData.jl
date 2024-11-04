@@ -2,10 +2,8 @@ module TZJData
 
 using Artifacts
 
-const ARTIFACT_DIR = artifact"tzjdata"
-
 artifact_dir() = artifact"tzjdata"
-Base.@deprecate_binding ARTIFACT_DIR artifact_dir()
+Base.@deprecate_binding ARTIFACT_DIR artifact_dir() false
 
 const TZDATA_VERSION = let
     artifact_dict = Artifacts.parse_toml(joinpath(@__DIR__, "..", "Artifacts.toml"))
