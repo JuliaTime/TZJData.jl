@@ -27,7 +27,7 @@ julia> using TimeZones: TZJFile
 
 julia> function load(tzname)
            rel_path = joinpath(split(tzname, '/'))
-           return open(TZJFile.read, joinpath(TZJData.ARTIFACT_DIR, rel_path), "r")(tzname)
+           return open(TZJFile.read, joinpath(TZJData.artifact_dir(), rel_path), "r")(tzname)
        end
 load (generic function with 1 method)
 

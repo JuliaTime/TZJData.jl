@@ -46,7 +46,7 @@ function sha256sum(tarball_path)
 end
 
 @testset "TZJData.jl" begin
-    @test isdir(TZJData.ARTIFACT_DIR)
+    @test isdir(TZJData.artifact_dir())
     @test occursin(r"^\d{4}[a-z]$", TZJData.TZDATA_VERSION)
 
     @testset "validate unpublished artifact" begin
@@ -69,7 +69,7 @@ end
 
     @testset "load compiled" begin
         cache = Dict{String,Tuple{TimeZone,Class}}()
-        _reload_cache!(cache, TZJData.ARTIFACT_DIR)
+        _reload_cache!(cache, TZJData.artifact_dir())
         @test !isempty(cache)
     end
 
