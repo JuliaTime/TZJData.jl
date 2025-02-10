@@ -1,6 +1,9 @@
 ---
 name: Release
 on:
+  pull_request:
+    paths:
+      - .github/workflows/Release.yaml
   push:
     branches:
       - main
@@ -46,6 +49,7 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v4
       - name: Publish Release
         uses: ncipollo/release-action@v1
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           tag: ${{ steps.details.outputs.tag }}
           body: ${{ steps.build_changelog.outputs.changelog }}
