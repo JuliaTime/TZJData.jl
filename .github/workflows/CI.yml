@@ -45,6 +45,10 @@ jobs:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     needs: unpublished
     runs-on: ${{ matrix.os }}
+    # These permissions are needed to:
+    # - List artifacts
+    permissions:
+      actions: read
     continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
@@ -67,6 +71,16 @@ jobs:
         with:
           workflow: Update.yaml
           name: ${{ needs.unpublished.outputs.key }}
+      # Assists in debugging cross workflow artifact issues
+      - name: List distinct artifacts
+        if: ${{ !cancelled() && steps.action-artifact.outcome == 'faliure' }}
+        run: |
+          # Show the earliest entry for each artifact
+          # https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-artifacts-for-a-repository
+          gh api -X GET "/repos/{owner}/{repo}/actions/artifacts" | jq '.artifacts | sort_by(.created_at) | unique_by(.name)'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
       - name: Clear cached Overrides.toml
         if: ${{ !needs.unpublished.outputs.key }}
         run: rm -f ~/.julia/artifacts/Overrides.toml
