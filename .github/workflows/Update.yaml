@@ -8,6 +8,7 @@ name: Update
 on:
   pull_request:
     paths:
+      - "gen/**"
       - .github/workflows/Update.yaml
   schedule:
     - cron: "44 9 * * *"  # Every day at 09:44 UTC
