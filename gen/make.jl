@@ -145,7 +145,7 @@ function update_tzdata(; force::Bool=false)
     # so we'll perform a rebuild of the current tzdata version.
     new_tzdata_version = next_tzdata_version(old_tzdata_version)
     if isnothing(new_tzdata_version)
-        new_tzdata_version = tzdata_version
+        new_tzdata_version = old_tzdata_version
         new_version = Base.nextpatch(old_version)
     else
         new_version = Base.nextminor(old_version)
