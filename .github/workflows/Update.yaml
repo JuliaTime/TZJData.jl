@@ -27,7 +27,7 @@ jobs:
     env:
       JULIA_PROJECT: gen
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || 'main' }}
       - uses: julia-actions/setup-julia@v2
@@ -114,5 +114,5 @@ jobs:
   #   permissions:
   #     actions: write
   #   steps:
-  #     - uses: actions/checkout@v5
+  #     - uses: actions/checkout@v6
   #     - uses: gautamkrishnar/keepalive-workflow@v2
