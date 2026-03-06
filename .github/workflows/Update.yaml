@@ -101,13 +101,18 @@ jobs:
   # Work around having GitHub suspend the scheduled workflow if there is no commit activity
   # for the past 60 days. As this repo doesn't get much activity beyond artifact updates
   # this can be quite annoying.
-  keepalive:
-    name: Keepalive
-    runs-on: ubuntu-latest
-    # These permissions are needed to:
-    # - Keep the workflow alive: https://github.com/marketplace/actions/keepalive-workflow#github-api-keepalive-workflow---default-for-github-actions-users
-    permissions:
-      actions: write
-    steps:
-      - uses: actions/checkout@v5
-      - uses: gautamkrishnar/keepalive-workflow@v2
+  #
+  # 2026-03-06: The GHA https://github.com/gautamkrishnar/keepalive-workflow/ now shows the
+  # message "This repository has been disabled" by GitHub Staff due to "a violation of
+  # GitHub's terms of service".
+  #
+  # keepalive:
+  #   name: Keepalive
+  #   runs-on: ubuntu-latest
+  #   # These permissions are needed to:
+  #   # - Keep the workflow alive: https://github.com/marketplace/actions/keepalive-workflow#github-api-keepalive-workflow---default-for-github-actions-users
+  #   permissions:
+  #     actions: write
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - uses: gautamkrishnar/keepalive-workflow@v2
