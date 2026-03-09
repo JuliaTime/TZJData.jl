@@ -33,7 +33,7 @@ jobs:
               println(io, "tarball_filename=$tarball_filename")
               println(io, "tag=v$(project.version)")
           end
-      - uses: dawidd6/action-download-artifact@v11
+      - uses: dawidd6/action-download-artifact@v16
         id: action-artifact
         with:
           workflow: Update.yaml
