@@ -63,7 +63,7 @@ jobs:
       - run: git diff
       # Store the Julia artifact tarball as a GitHub actions artifact. This will allow us to retrieve this
       # tarball from other workflows.
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: ${{ steps.build.outputs.updated == 'true' }}
         id: action-artifact
         with:
