@@ -3,8 +3,8 @@ module TZJData
 using Artifacts
 
 # Store the relocatable artifact identity rather than the depot-specific path. Resolve
-# that identity against the runtime artifact directories without the world-age trampoline
-# emitted by the `artifact"..."` macro.
+# it at runtime, with artifact overrides, without the world-age trampoline emitted by
+# the `artifact"..."` macro.
 const _ARTIFACT_HASH = let
     artifacts_toml = joinpath(@__DIR__, "..", "Artifacts.toml")
     hash = Artifacts.artifact_hash("tzjdata", artifacts_toml)
@@ -12,13 +12,7 @@ const _ARTIFACT_HASH = let
     hash
 end
 
-function artifact_dir()
-    dirs = Artifacts.artifacts_dirs(bytes2hex(_ARTIFACT_HASH.bytes))
-    for dir in dirs
-        isdir(dir) && return dir
-    end
-    return first(dirs)
-end
+artifact_dir() = Artifacts.artifact_path(_ARTIFACT_HASH)
 
 # Deprecation for TZJData.jl v1
 Base.@deprecate_binding ARTIFACT_DIR artifact_dir() false
