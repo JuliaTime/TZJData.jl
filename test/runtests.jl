@@ -49,6 +49,22 @@ end
     @test isdir(TZJData.artifact_dir())
     @test occursin(r"^\d{4}[a-z]$", TZJData.TZDATA_VERSION)
 
+    @testset "artifact override" begin
+        override_dir = mktempdir()
+        old_overrides = Artifacts.ARTIFACT_OVERRIDES[]
+        try
+            Artifacts.ARTIFACT_OVERRIDES[] = Dict{Symbol,Any}(
+                :UUID => Dict{Base.UUID,Dict{String,Union{String,SHA1}}}(),
+                :hash => Dict{SHA1,Union{String,SHA1}}(
+                    TZJData._ARTIFACT_HASH => override_dir,
+                ),
+            )
+            @test TZJData.artifact_dir() == override_dir
+        finally
+            Artifacts.ARTIFACT_OVERRIDES[] = old_overrides
+        end
+    end
+
     @testset "validate unpublished artifact" begin
         artifact_toml = get(ENV, "TZJDATA_ARTIFACT_TOML", nothing)
         tarball_path = get(ENV, "TZJDATA_TARBALL_PATH", nothing)

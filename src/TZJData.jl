@@ -2,11 +2,17 @@ module TZJData
 
 using Artifacts
 
-# Avoid using a constant to define the artifact directory as this will hardcode the path
-# to the location used during pre-compilation which can be problematic if the Julia depot
-# relocated afterwards. One scenario where this can occur is when this package is used
-# within a system image.
-artifact_dir() = artifact"tzjdata"
+# Store the relocatable artifact identity rather than the depot-specific path. Resolve
+# it at runtime, with artifact overrides, without the world-age trampoline emitted by
+# the `artifact"..."` macro.
+const _ARTIFACT_HASH = let
+    artifacts_toml = joinpath(@__DIR__, "..", "Artifacts.toml")
+    hash = Artifacts.artifact_hash("tzjdata", artifacts_toml)
+    hash === nothing && error("Unable to determine tzjdata artifact hash")
+    hash
+end
+
+artifact_dir() = Artifacts.artifact_path(_ARTIFACT_HASH)
 
 # Deprecation for TZJData.jl v1
 Base.@deprecate_binding ARTIFACT_DIR artifact_dir() false
