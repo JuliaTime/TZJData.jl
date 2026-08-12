@@ -34,7 +34,7 @@ jobs:
               println(io, "key=$key")
               println(io, "tarball_filename=$tarball_filename")
               println(io, "tag=v$(project.version)")
-              println(io, "release_asset_url=$url")
+              println(io, "release_asset_url=$release_asset_url")
           end
       # Self-test uses the tarball associated with the GitHub release since the GitHub
       # artifact will eventually expire
