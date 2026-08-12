@@ -43,7 +43,7 @@ jobs:
         run: curl -fsSL "${{ steps.details.outputs.release_asset_url }}" -o "${{ steps.details.outputs.tarball_filename }}"
       - name: Download artifact from Update.yaml workflow run
         id: action-artifact
-        uses: dawidd6/action-download-artifact@v11
+        uses: dawidd6/action-download-artifact@v21
         if: ${{ github.event_name != 'pull_request' }}
         with:
           workflow: Update.yaml
