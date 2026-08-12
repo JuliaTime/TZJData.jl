@@ -25,16 +25,26 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg.Types: read_project
+          using TOML: TOML
           include(joinpath(pwd(), "gen", "artifacts.jl"))
           (; key, tarball_filename) = gh_artifact()
           project = read_project("Project.toml")
+          release_asset_url = only(TOML.parsefile("Artifacts.toml")["tzjdata"]["download"])["url"]
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "key=$key")
               println(io, "tarball_filename=$tarball_filename")
               println(io, "tag=v$(project.version)")
+              println(io, "release_asset_url=$release_asset_url")
           end
-      - uses: dawidd6/action-download-artifact@v11
+      # Self-test uses the tarball associated with the GitHub release since the GitHub
+      # artifact will eventually expire
+      - name: Download artifact from GitHub release asset
+        if: ${{ github.event_name == 'pull_request' }}
+        run: curl -fsSL "${{ steps.details.outputs.release_asset_url }}" -o "${{ steps.details.outputs.tarball_filename }}"
+      - name: Download artifact from Update.yaml workflow run
         id: action-artifact
+        uses: dawidd6/action-download-artifact@v11
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           workflow: Update.yaml
           name: ${{ steps.details.outputs.key }}
