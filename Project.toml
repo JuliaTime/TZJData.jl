@@ -1,6 +1,6 @@
 name = "TZJData"
 uuid = "dc5dba14-91b3-4cab-a142-028a31da12f7"
-version = "1.6.0+2025c"
+version = "1.7.0+2026a"
 authors = ["Curtis Vogt <curtis.vogt@gmail.com>"]
 
 [deps]
