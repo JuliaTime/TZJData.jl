@@ -120,7 +120,7 @@ jobs:
           set -x
           cat ~/.julia/artifacts/Overrides.toml
           cat Artifacts.toml
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
