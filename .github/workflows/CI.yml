@@ -22,7 +22,7 @@ jobs:
       content_hash: ${{ steps.key.outputs.content_hash }}
     steps:
       - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
