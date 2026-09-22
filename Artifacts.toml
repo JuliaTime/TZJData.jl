@@ -1,6 +1,6 @@
 [tzjdata]
-git-tree-sha1 = "03b58c8355a36c19e1d59f1a24bc01cfdde99771"
+git-tree-sha1 = "e030087020a883f5611c6b3204d0aa57a2f59f82"
 
     [[tzjdata.download]]
-    sha256 = "a45913fa7e04875cada49fcb3eb1693b6216f28ce2e8afe7bf0452d1bfbc14a4"
-    url = "https://github.com/JuliaTime/TZJData.jl/releases/download/v1.9.0+2026c/tzjfile-v1-tzdata2026c.tar.gz"
+    sha256 = "9aaeee0e929010ea7f1b28e8004166ef290514f629362ed97997283cf58635b3"
+    url = "https://github.com/JuliaTime/TZJData.jl/releases/download/v1.10.0+2026d/tzjfile-v1-tzdata2026d.tar.gz"
